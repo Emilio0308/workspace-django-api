@@ -66,7 +66,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             raise exceptions.ValidationError({"detail": "El usuario no pertenece a este espacio de trabajo"})
         if currentWorkSpace.status == False :
             raise exceptions.ValidationError({"detail": "espacio de trabajo no existe o deshabilitado"})
-        return Task.objects.filter(workspace_id=workspace_id)
+        return Task.objects.filter(workspace_id=workspace_id, status=True)
     
     # def get_serializer_class(self):
     #     if self.action == 'create':
