@@ -3,7 +3,7 @@ from rest_framework import viewsets, status, exceptions
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import WorkSpace, Task
-from .serializers import TaskSerializer, UserSerializer, WorkSpaceSerializer, CreateWorkSpaceSerializer, UserSerializerOne
+from .serializers import TaskSerializer, UserSerializer, WorkSpaceSerializer, CreateWorkSpaceSerializer, UserSerializerOne, UserSerializerUpdate
 from .permissions import IsOwnerPermission
 from django.contrib.auth.models import User
 from django.db.models import Q
@@ -92,6 +92,8 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return UserSerializerOne
+        if self.action == 'update':
+            return UserSerializerUpdate
         return UserSerializer
     
     def destroy(self, request, *args, **kwargs):
