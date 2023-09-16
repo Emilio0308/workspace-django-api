@@ -16,5 +16,6 @@ class IsOwnerPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         reques_user = request.user.id
         user_in_kwargs = int(view.kwargs['owner_id'])
+        print(reques_user ,user_in_kwargs )
         return reques_user == user_in_kwargs
     

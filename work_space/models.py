@@ -24,3 +24,12 @@ class Task(models.Model):
 
     def __str__(self) -> str:
         return self.title
+    
+class Table(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    workspace = models.ForeignKey(WorkSpace, on_delete=models.CASCADE)
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    data = models.JSONField()
+    status = models.BooleanField(default=True)
+    created = models.DateTimeField(auto_now_add=True)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import WorkSpace, Task
+from .models import WorkSpace, Task, Table
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -32,14 +32,6 @@ class UserSerializerUpdate(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-
-
-
-
-
-
-
-
 class WorkSpaceSerializer(serializers.ModelSerializer):
     menbers = UserSerializer(many=True)
     owner = serializers.StringRelatedField()
@@ -63,10 +55,19 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         exclude = ('status',)
 
+class TableSerializer(serializers.ModelSerializer):
+    owner = serializers.StringRelatedField()
+    workspace = serializers.StringRelatedField()
+    class Meta:
+        model = Table
+        exclude = ('status',)
+
+
 # class CreateTaskSerializer(serializers.ModelSerializer):
     # class Meta:
     #     model = Task
     #     fields = ('title','description')
+
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
