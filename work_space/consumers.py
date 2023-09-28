@@ -1,7 +1,7 @@
 import json
 from channels.generic.websocket import WebsocketConsumer
-from .serializers import TaskSerializer
-from .models import WorkSpace, Task
+from .serializers import TaskSerializer, TableSerializer
+from .models import WorkSpace, Task, Table
 from asgiref.sync import async_to_sync
 
 
@@ -65,27 +65,38 @@ class ConsumerView(WebsocketConsumer):
             'tasks': serialized_tasks
         }))
 
-
-
     def send_updated_tasks_to_group(self, workspace_id, data):
-        updated_tasks = self.getTaskEvent(data,True)
-        
+        updated_tasks = self.getTaskEvent(data, True)
+
         group_name = f'workspace_{workspace_id}'
         message = {
             'type': 'updated_tasks',
             'updated_tasks': updated_tasks,
         }
-        
+
         async_to_sync(self.channel_layer.group_send)(group_name, message)
 
     def updated_tasks(self, event):
         updated_tasks = event['updated_tasks']
-        
+
         self.send(text_data=json.dumps({
             'event_type': 'updatedTasks',
             'tasks': updated_tasks,
         }))
 
+    def getTables(self, data):
+        workspace_id = data.get('workspaceId')
+        user_id = self.user_id
+
+        allTables = Table.objects.filter(workspace_id=workspace_id)
+        serialized_tables = TableSerializer(allTables, many=True).data
+
+        print(serialized_tables)
+
+        self.send(text_data=json.dumps({
+            'event_type': 'tables',
+            'tables': serialized_tables
+        }))
 
     def receive(self, text_data):
         data = json.loads(text_data)
@@ -98,3 +109,6 @@ class ConsumerView(WebsocketConsumer):
             workspace_id = data.get('workspaceId')
             print('llamar a la funcion send_updated_tasks_to_group')
             self.send_updated_tasks_to_group(workspace_id, data)
+
+        if event_type == 'getTables':
+            self.getTables(data)
