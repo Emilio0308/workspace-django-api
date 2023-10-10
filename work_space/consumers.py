@@ -77,6 +77,7 @@ class ConsumerView(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_send)(group_name, message)
 
     def updated_tasks(self, event):
+        print('EVENT: ', event)
         updated_tasks = event['updated_tasks']
 
         self.send(text_data=json.dumps({
@@ -84,14 +85,31 @@ class ConsumerView(WebsocketConsumer):
             'tasks': updated_tasks,
         }))
 
-    def getTables(self, data):
+    def getTables(self, data, updating=False):
         workspace_id = data.get('workspaceId')
         user_id = self.user_id
+
+        try:
+            current_workspace = WorkSpace.objects.get(id=workspace_id)
+        except WorkSpace.DoesNotExist:
+            raise ValueError("El espacio de trabajo no existe")
+
+        workspace_members = current_workspace.menbers.all()
+
+        if not workspace_members.filter(id=user_id).exists():
+            raise ValueError(
+                "El usuario no pertenece a este espacio de trabajo")
+        if not current_workspace.status:
+            raise ValueError(
+                "Espacio de trabajo no existe o está deshabilitado")
 
         allTables = Table.objects.filter(workspace_id=workspace_id)
         serialized_tables = TableSerializer(allTables, many=True).data
 
-        print(serialized_tables)
+        # print(serialized_tables)
+
+        if updating:
+            return serialized_tables
 
         self.send(text_data=json.dumps({
             'event_type': 'tables',
@@ -101,14 +119,36 @@ class ConsumerView(WebsocketConsumer):
     def receive(self, text_data):
         data = json.loads(text_data)
         event_type = data.get('event_type')
+        workspace_id = data.get('workspaceId')
 
         if event_type == 'getTasks':
             self.getTaskEvent(data)
 
         if event_type == 'updated_tasks':
-            workspace_id = data.get('workspaceId')
             print('llamar a la funcion send_updated_tasks_to_group')
             self.send_updated_tasks_to_group(workspace_id, data)
 
         if event_type == 'getTables':
             self.getTables(data)
+
+        if event_type == 'updating_tables':
+            self.send_updated_tables_to_group(workspace_id, data)
+
+    def send_updated_tables_to_group(self, workspace_id, data):
+        list_tables = self.getTables(data, True)
+        group_name = f'workspace_{workspace_id}'
+
+        message = {
+            'type': 'send_tables',
+            'list_tables': list_tables
+        }
+        async_to_sync(self.channel_layer.group_send)(group_name, message)
+
+    def send_tables(self, event):
+        list_tables = event['list_tables']
+
+        tables_to_send = json.dumps({
+            'event_type': 'tablas_actualizadas',
+            'list_tables': list_tables
+        })
+        self.send(tables_to_send)

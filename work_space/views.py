@@ -64,8 +64,12 @@ class tableViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         owner_id = self.kwargs['owner_id']
         workspace_id = self.kwargs['workspace_id']
+
         tables = Table.objects.filter(
-            owner_id=owner_id, workspace_id=workspace_id, status=True)
+            workspace_id=workspace_id, status=True)
+
+        # owner_id=owner_id,
+        print(tables)
         return tables
 
     def perform_create(self, serializer):
@@ -78,9 +82,6 @@ class tableViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.status = False
         instance.save()
-
-    
-    
 
 
 class TaskViewSet(viewsets.ModelViewSet):
